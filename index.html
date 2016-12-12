@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Example 01.02 - First Scene</title>
+    <script type="text/javascript" src="three.js"></script>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+    var group ;
+    var cube ; 
+    var camera;
+    var scene;
+    var cube1;
+    // once everything is loaded, we run our Three.js stuff.
+    function init() {
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // create a render and set the size
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setClearColorHex();
+        renderer.setClearColor(new THREE.Color(0xEEEEEE));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // show axes in the screen
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        var ambientLight = new THREE.AmbientLight(0x0c0c0c);
+        scene.add(ambientLight);
+
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(-40, 60, -10);
+
+        scene.add(spotLight);
+
+        // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(60, 20);
+        var planeMaterial = new THREE.MeshBasicMaterial({color: 0xcccccc});
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+
+        // rotate and position the plane
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 15;
+        plane.position.y = 0;
+        plane.position.z = 0;
+
+        // add the plane to the scene
+        scene.add(plane);
+
+        // create a cube
+        var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+        var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xff0000});
+        cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube1 = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube1.position.x=8;
+        cube1.position.y=5;
+        scene.add(cube1)
+        // position the cube
+        cube.position.x = 0;
+        cube.position.y = 0;
+        cube.position.z = 0;
+        
+        //cube.rotateX(0.28*Math.PI);
+        //cube.rotateY(0.18*Math.PI);
+        //cube.rotation.x+=0.25*Math.PI;
+        cube.up.y=-1;
+        cube.up.x=0;
+        cube.up.z=0;
+        cube.rotationAutoUpdate=false;
+
+        // add the cube to the scene
+        //scene.add(cube);
+        group  = new THREE.Group();
+        group.position.y=5;
+        group.add(cube);
+        scene.add(group);
+        //group.rotateY(0.5*Math.PI);
+        // create a sphere
+        var sphereGeometry = new THREE.SphereGeometry(50, 20, 20);
+        var sphereMaterial = new THREE.MeshBasicMaterial({color: 0x7777ff, transparent: true,side:THREE.DoubleSide,opacity:0.001});
+        var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+
+        // position the sphere
+        sphere.position.x = 0;
+        sphere.position.y = 12;
+        sphere.position.z = -30;
+
+        // add the sphere to the scene
+        scene.add(sphere);
+
+        // position and point the camera to the center of the scene
+        camera.position.x = 0;
+        camera.position.y = 5;
+        camera.position.z = -20;
+        //camera.lookAt(scene.position);
+        camera.lookAt(cube.position);
+        group.rotation.copy(camera.rotation);
+        document.addEventListener("mousemove",OnDocumentMouseMove,false);
+        document.addEventListener("mousedown",OnDocumentMouseDown,false);
+        var tempX=0;
+        var tempY=0;
+        var cube_rotation = new THREE.Vector3(0,0,0);
+        var group_rotation = new THREE.Vector3(camera.rotation.x,camera.rotation.y,camera.rotation.z);
+        function OnDocumentMouseDown(event)
+        {
+            var vector = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0.5);
+            vector = vector.unproject(camera);
+            var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObjects([sphere],true);
+            tempX=event.clientX;
+            tempY=event.clientY;
+        }
+        function OnDocumentMouseMove(event){
+            if(event.buttons===1)
+                {
+            var vector = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0.5);
+            vector = vector.unproject(camera);
+            var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObjects([sphere],true);
+                    
+                        var resultX= event.clientX-tempX;
+                        var resultY = event.clientY-tempY;
+                        //group.remove(cube);
+                        //var cube_rotation = new THREE.Vector3(cube.rotation.x,cube.rotation.y,cube.rotation.z);
+                        var rotWorldMatrix;
+                        // Rotate an object around an arbitrary axis in world space       
+                        function rotateAroundWorldAxis(object, axis, radians) {
+                        rotWorldMatrix = new THREE.Matrix4();
+                        rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
+
+                        // old code for Three.JS pre r54:
+                        //  rotWorldMatrix.multiply(object.matrix);
+                        // new code for Three.JS r55+:
+                        rotWorldMatrix.multiply(object.matrix);                // pre-multiply
+
+                        object.matrix = rotWorldMatrix;
+
+                        // old code for Three.js pre r49:
+                        // object.rotation.getRotationFromMatrix(object.matrix, object.scale);
+                        // old code for Three.js pre r59:
+                        // object.rotation.setEulerFromRotationMatrix(object.matrix);
+                        // code for r59+:
+                        object.rotation.setFromRotationMatrix(object.matrix);
+                        }
+                        
+                        if(Math.abs(resultY)<Math.abs(resultX))
+                        {
+                            var vec = new THREE.Vector3(0,1,0);
+                            vec.applyEuler(camera.rotation)
+                            rotateAroundWorldAxis(group,vec,resultX/1000);
+                        }
+                        else
+                        {
+                            var vec = new THREE.Vector3(1,0,0);
+                            vec.applyEuler(camera.rotation)
+                            rotateAroundWorldAxis(group,vec,resultY/1000);
+                        }
+                        tempX=event.clientX;
+                        tempY=event.clientY;
+                    }
+        }
+
+
+
+        // add the output of the renderer to the html element
+        document.getElementById("WebGL-output").appendChild(renderer.domElement);
+
+        // render the scene
+        render();
+
+        function render()
+        {
+            /*if(cube.rotation.y< Math.PI*0.25)
+            {
+                cube.rotateY(0.001);
+            }
+            else
+            {
+                if(cube.rotation.x<Math.PI*0.25 )
+                {
+                    cube.rotateX(0.001);
+                }
+            }
+            */
+            //group.rotateY(0.01);
+            //cube1.rotateOnAxis(new THREE.Vector3(-1,-1,-1),0.01)
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+    }
+    window.onload = init;
+
+</script>
+</body>
+</html>
