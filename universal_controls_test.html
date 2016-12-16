@@ -1,0 +1,48 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/0.3.2/aframe.min.js"></script>
+<script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v2.5.2/dist/aframe-extras.js"></script>
+<!DOCTYPE html>  
+<html>  
+<head>
+<title>sphere position</title>
+<script>
+AFRAME.registerComponent("move",{
+init : function(){
+	this.el.addEventListener("click",function(){
+		var camera = document.querySelector("a-camera");
+		camera.setAttribute("rotation",{
+			x: 0,
+			y: 0,
+			z: 0 
+		});
+	});
+}
+
+});
+AFRAME.registerComponent("eve",{
+	init : function(){
+		var cursor = document.querySelector("#cursor");
+		this.el.addEventListener("mouseenter",function(){
+			cursor.setAttribute("material","color","springgreen");
+		});
+		this.el.addEventListener("mouseleave",function(){
+			cursor.setAttribute("material","color","black");
+		})
+	}
+})
+  </script>
+</head>
+<body>
+<a-scene>
+  <a-camera universal-controls position="0 0 0">
+    <a-entity id="cursor" cursor="fuse: true;fuseTimeout:500"
+    	material="color:black"
+    	geometry="primitive:ring"
+    	position="0 0 -1"
+    	scale="0.01 0.01 0.01"
+    	event-set__1="_event: mouseenter; color: springgreen"
+        event-set__2="_event: mouseleave; color: black"
+    ></a-entity>
+  </a-camera>
+<a-box position="0 0 -2" color="blue" move eve></a-box>
+</body>
+</html>
