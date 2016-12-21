@@ -8,12 +8,10 @@
 AFRAME.registerComponent("move",{
 init : function(){
 	this.el.addEventListener("click",function(){
-		var camera = document.querySelector("#camera-entity");
-		camera.setAttribute("rotation",{
-			x: 0,
-			y: 0,
-			z: 0 
-		});
+		var wrapEl = document.querySelector('#camera-entity');
+		var cameraEl = document.querySelector('[camera]');
+		var r = cameraEl.getAttribute('rotation');
+		wrapEl.setAttribute('rotation', {x: -1 * r.x, y: -1 * r.y, z: -1 * r.z});
 	});
 }
 
