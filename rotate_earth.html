@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Rotate The earth</title>
+    <script type="text/javascript" src="libs/three.js"></script> 
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Stats-output">
+</div>
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+    var sphere;
+    // once everything is loaded, we run our Three.js stuff.
+    function init() {
+
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        var scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // create a render and set the size
+        var webGLRenderer = new THREE.WebGLRenderer();
+        webGLRenderer.setClearColor(new THREE.Color(0x000, 1.0));
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        webGLRenderer.shadowMapEnabled = true;
+
+        sphere = createMesh(new THREE.SphereGeometry(10, 40, 40));
+        // add the sphere to the scene
+        scene.add(sphere);
+
+        camera.position.x = -10;
+        camera.position.y = 15;
+        camera.position.z = 25;
+
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
+
+        var ambi = new THREE.AmbientLight(0x181818);
+        scene.add(ambi);
+
+        var spotLight = new THREE.DirectionalLight(0xffffff);
+        spotLight.position.set(550, 100, 550);
+        spotLight.intensity = 0.6;
+
+        scene.add(spotLight);
+
+        // add the output of the renderer to the html element
+        document.getElementById("WebGL-output").appendChild(webGLRenderer.domElement);
+
+        var vector = new THREE.Vector3().copy(sphere.position);
+
+        vector = vector.unproject(camera);
+
+        var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+        var intersects = raycaster.intersectObjects([sphere],true);
+
+        var intersected_point = new THREE.Vector3().copy(intersects[0].point);
+
+        document.addEventListener("click",OnDocumentClick,false);
+
+
+        function OnDocumentClick(event)
+        {
+            var vector = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0.5);
+            vector = vector.unproject(camera);
+
+            var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+            var intersects = raycaster.intersectObjects([sphere],true);
+
+            if(intersects.length > 0)
+            {
+                //current sphere matrix
+                var sphere_matrix = new THREE.Matrix4().copy(sphere.matrix);
+                var sphere_inverse_matrix = new THREE.Matrix4();
+
+                //get sphere inverse matrix
+                sphere_inverse_matrix.getInverse(sphere_matrix);
+                var matrix1 = new THREE.Matrix4();
+
+                //get the rotation matrix of mouse click point
+                matrix1.lookAt(sphere.position,intersects[0].point.applyMatrix4(sphere_inverse_matrix),sphere.up);
+                var inverse_matrix1 = new THREE.Matrix4();
+
+                //get the inverse matrix of the rotation matrix above 
+                inverse_matrix1.getInverse(matrix1);
+
+                //get rotation matrix of sphere rotate to a point which the line from camera to sphere center intersect with the sphere.
+                var matrix2 = new THREE.Matrix4();
+                matrix2.lookAt(sphere.position,intersected_point,sphere.up);
+
+                //build rotation matrix to set sphere rotation
+                var matrix3 = new THREE.Matrix4();
+                matrix3.multiply(inverse_matrix1);
+                matrix3.multiply(matrix2);
+
+                //set the sphere rotation with the rotation matrix
+                sphere.rotation.setFromRotationMatrix(matrix3,sphere.rotation.order);
+            }
+        }
+
+        render();
+
+        function createMesh(geom) {
+            var planetTexture = THREE.ImageUtils.loadTexture("planets/Earth.png");
+            var specularTexture = THREE.ImageUtils.loadTexture("planets/EarthSpec.png");
+            var normalTexture = THREE.ImageUtils.loadTexture("planets/EarthNormal.png");
+
+
+            var planetMaterial = new THREE.MeshPhongMaterial();
+            planetMaterial.specularMap = specularTexture;
+            planetMaterial.specular = new THREE.Color(0x4444aa);
+
+
+            planetMaterial.normalMap = normalTexture;
+            planetMaterial.map = planetTexture;
+
+            var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, [planetMaterial]);
+
+            return mesh;
+        }
+
+        function render() {
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera);
+        }
+
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
