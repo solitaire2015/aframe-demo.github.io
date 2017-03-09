@@ -1,0 +1,1425 @@
+<!DOCTYPE html>  
+<html>  
+<head>
+<title>new scene</title>
+<script src="javascripts/aframe.js"></script>
+<script src="javascripts/aframe-extras.js"></script>
+<script src="javascripts/kframe.min.js"></script>
+<script src="javascripts/my-collider.js"></script>
+<script src = "javascripts/lazy-loading.js"></script>
+<script src = "javascripts/my-animation.js"></script>
+<script type="text/javascript">
+  AFRAME.registerComponent('update-raycaster', {
+  schema: {type: 'selector'},
+
+  init: function () {
+    var raycasterEl = this.data;
+    raycasterEl.components.raycaster.data.objects="#"+this.el.id;
+    raycasterEl.components.raycaster.refreshObjects();
+  }
+});
+</script>
+<script>
+	AFRAME.registerComponent("limit-angle",{
+		schema: {
+			selector:{
+  			type: 'selector'
+			},
+			scale:{
+				type:"number"
+			},
+			positiony:{
+				type:"number"
+			}
+  		},
+  		dependencies:["position","rotation"],
+		init : function(){
+			this.euler=new THREE.Euler();
+		},
+		tick : function(){
+			var pos = new THREE.Vector3();
+			pos.setFromMatrixPosition(this.data.selector.object3D.matrixWorld);
+			var camera_pos = new THREE.Vector3();
+			camera_pos.setFromMatrixPosition(document.querySelector("#camera").object3D.matrixWorld);
+			var direction = new THREE.Vector3();
+			direction.subVectors(pos,camera_pos).normalize().multiplyScalar(this.data.scale);
+			this.el.object3D.position.copy(pos);
+			var cursor_rotation=new THREE.Euler(0,0,0,"YXZ");
+			cursor_rotation.setFromRotationMatrix(this.data.selector.object3D.matrixWorld);
+			this.el.object3D.rotation.y=cursor_rotation.y;
+			//this.el.object3D.position.z-=1;
+			this.el.object3D.position.y=this.data.positiony;
+			this.el.object3D.position.x+=direction.x;
+			this.el.object3D.position.z+=direction.z;
+		}
+	});
+	AFRAME.registerComponent("arrow-move",{
+		schema:{
+			movementenable:{
+				default:true
+			}
+		},
+		init:function(){
+			this.cursor = document.querySelector("#cursor");
+			this.direction = new THREE.Vector3();
+			this.camera = document.querySelector("#camera");
+			this.camera_pos = new THREE.Vector3();
+			this.cursor_pos = new THREE.Vector3();
+			this.cursor_rotation = new THREE.Euler(0,0,0,"YXZ");
+			this.intersected = false;
+			this.inited = false;
+			this.el.addEventListener("mouseenter",function(){
+				this.flag=true;
+			}.bind(this));
+			this.el.addEventListener("mouseleave",function(){
+				this.flag=false;
+			}.bind(this));
+			camera.addEventListener("willhit",function(){
+				this.intersected=true;
+			}.bind(this));
+			camera.addEventListener("willnothit",function(){
+				this.intersected=false;
+			}.bind(this));
+		},
+		tick:function(){
+			this.cursor_rotation.setFromRotationMatrix(this.cursor.object3D.matrixWorld);
+			this.cursor_pos.setFromMatrixPosition(this.cursor.object3D.matrixWorld);
+			if(!(this.data.movementenable))
+			{
+				return;
+			}
+			if((this.cursor_rotation.x<-0.16999999614859562&&(!(this.intersected)))||(!(this.inited)&&this.cursor_rotation.x<-0.16999999614859562))
+			{
+				if(!(this.inited))
+				{
+					document.querySelector("#camera").components["my-collider"].update();
+					this.inited = true;
+				}
+				this.camera_pos.setFromMatrixPosition(this.camera.object3D.matrixWorld);
+				this.direction.subVectors(this.cursor_pos,this.camera_pos);
+				this.direction.y=0;
+				this.direction.normalize();
+				this.direction.multiplyScalar(0.05);
+				this.camera.components.position.data.x+=this.direction.x;
+				this.camera.components.position.data.z+=this.direction.z;
+				this.camera.components.position.update();
+			}
+		}
+	});
+</script>
+<script type="text/javascript">
+	AFRAME.registerComponent("collider-able",{
+
+	})
+</script>
+</head>
+<a-scene  inspector="url: https://aframe.io/releases/0.3.0/aframe-inspector.min.js">
+
+	<a-assets>
+		<img id="sky" src="img/sechelt.jpg">
+		<img id="wall" src="img/new_scene/wall.jpg">
+		<img id="cpu_pic" src="img/core.jpg">
+		<img id="keyboard_pic" src="img/keyboard.jpg">
+		<img id="motherboard_pic" src="img/motherboard.jpg">
+		<img id="computer_pic" src="img/computer.jpg">
+		<img id="wirelesscard_pic" src="img/wirelesscard.jpg">
+		<img id="dragonite_pic" src="img/dragonite.jpg">
+		<img id="charizard_pic" src="img/charizard.jpg">
+		<img id="power_pic" src="img/new_scene/power.jpg">
+		<img id="monitor_pic" src="img/new_scene/monitor.jpg">
+		<img id="memory_pic" src="img/new_scene/memory.jpg">
+		<img id="graphics_pic" src="img/new_scene/graphics_card.jpg">
+		<img id="speakers_pic" src="img/new_scene/speakers.jpg">
+		<img id="iphone_pic" src="img/new_scene/iphone5s.jpg">
+		<img id="winphone_pic" src="img/new_scene/windowsphone.png">
+		<img id="motherboard1_pic" src="img/new_scene/motherboard1.jpg">
+		<img id="carpet_pic" src="img/new_scene/carpet.jpg">
+		<img id="nokia_pic" src="img/new_scene/n80.jpg">
+		<img id="wood_pic" src="img/new_scene/wood.jpg">
+
+		<a-asset-item id="table-obj" src="object/new_scene/chair-and-table.obj"></a-asset-item>
+    	<a-asset-item id="table-mtl" src="object/new_scene/chair-and-table.mtl"></a-asset-item>
+    	<a-asset-item id="door-obj" src="object/new_scene/low-poly-wooden-door.obj"></a-asset-item>
+    	<a-asset-item id="door-mtl" src="object/new_scene/low-poly-wooden-door.mtl"></a-asset-item>
+    	<a-asset-item id="myarrow-obj" src="object/new_scene/arrow.obj"></a-asset-item>
+    	<img id="floor" src="img/new_scene/20130122_91b96292e4151d8f9533A54HJA5du7Yd.jpg">
+    	<script id="house" type="text/nunjucks">
+    		<a-entity position="0 0 0" collider-able>
+    		<!-- house templete wall -->
+			<a-plane id="housewall1"
+					 width="8.6"
+			 		 height="3"
+			 		 position="2.5 1.6 -2.8"
+			 		 rotation = "0 90 0"
+			 		 material="side:double;color:#1e90ff"
+			 		 update-raycaster="#cursor"
+			 		 ></a-plane>
+			<a-plane id="housewall2"
+					 width="5"
+			 		 height="3"
+			 		 position="0 1.6 -7.1"
+			 		 material="side:double;color:#1e90ff"
+			 		 update-raycaster="#cursor"></a-plane>
+			<a-plane id="housewall3"
+					 width="5"
+			 		 height="3"
+			 		 position="0 1.6 1.5"
+			 		 material="side:double;color:#1e90ff"
+			 		 update-raycaster="#cursor"></a-plane>
+			 <a-plane width="8.6"
+			 		 height="0.6"
+			 		 position="-2.5 2.75 -2.8"
+			 		 rotation = "0 90 0"
+			 		 material="side:double;color:#1e90ff"></a-plane>
+			 <!-- house templete product picture -->
+			 <a-plane id="product1_pic"
+			 		  width="2"
+			 		  height="1.5"
+			 		  position="0 1.75 1.4"
+			 		  material="side:double;src:{{ src1 }}"
+			 		  lazy-loading="group_position:0 1.5 -0.35;group_rotation:0 -90 0;obj:{{ obj1 }};mtl:{{ mtl1 }};model_position:{{ position1 }};model_rotation:{{ rotation1 }};model_scale:{{ scale1 }}"
+			 		  update-raycaster="#cursor"
+			 		  my-animation="-3 1.6 -0.3"></a-plane>
+			 <a-plane id="product2_pic"
+			 		  width="2"
+			 		  height="1.5"
+			 		  position="0 1.75 -7.08"
+			 		  material="side:double;src:{{ src2 }}"
+			 		  lazy-loading="group_position:0 1.5 -4.65;group_rotation:0 -90 0;obj:{{ obj2 }};mtl:{{ mtl2 }};model_position:{{ position2 }};model_rotation:{{ rotation2 }};model_scale:{{ scale2 }}"
+			 		  update-raycaster="#cursor"
+			 		  my-animation="-3 1.6 -4.7"></a-plane>
+			 <a-plane id="product3_pic"
+			 		  width="2"
+			 		  height="1.5"
+			 		  position="2.4 1.75 -4.8"
+			 		  rotation="0 90 0"
+			 		  material="side:double;src:{{ src3 }}"
+			 		  lazy-loading="group_position:0 1.5 -4.65;group_rotation:0 -90 0;obj:{{ obj3 }};mtl:{{ mtl3 }};model_position:{{ position3 }};model_rotation:{{ rotation3 }};model_scale:{{ scale3 }}"
+			 		  update-raycaster="#cursor"
+			 		  my-animation="-3 1.6 -4.7"></a-plane>
+			 <a-plane id="product4_pic"
+			 		  width="2"
+			 		  height="1.5"
+			 		  position="2.4 1.75 0"
+			 		  rotation="0 90 0"
+			 		  material="side:double;src:{{ src4 }}"
+			 		  lazy-loading="group_position:0 1.5 -0.35;group_rotation:0 -90 0;obj:{{ obj4 }};mtl:{{ mtl4 }};model_position:{{ position4 }};model_rotation:{{ rotation4 }};model_scale:{{ scale4 }}"
+			 		  update-raycaster="#cursor"
+			 		  my-animation="-3 1.6 -0.3"></a-plane>
+			 <!-- house templete Manufacturer lable -->
+			 <a-entity id=title 
+			 		   text="text:{{ text }}"
+			 		   scale="0.8 0.8 0.8"
+			 		   position="-2.5 2.55 -3.7"
+			 		   rotation="0 -90 0"
+			 		   material="color:black"></a-entity>
+			 <!-- house templete table -->
+			<a-entity 
+      				id="table1" 
+      				obj-model="obj:#table-obj;mtl:#table-mtl" 
+      				position="0 0 -4.7"
+      				scale="0.35 0.35 0.35"></a-entity>
+      		<a-entity 
+      				id="table2" 
+      				obj-model="obj:#table-obj;mtl:#table-mtl" 
+      				position="0 0 -0.3"
+      				scale="0.35 0.35 0.35"></a-entity>		
+
+	</a-entity>
+    	</script>
+    	<script id="shape" type="text/nunjucks">
+          <a-entity id="shape1" class="link" collider-able>
+      <a-plane width=10 height=10 position = "2.5 0.1 -2.5" rotation="-90 0 0" material = "src:#carpet_pic;repeat:2 2;side:double"></a-plane>
+       <!-- shape templete wall -->
+      <a-plane id="shapewall1"
+          width="5"
+          height="3"
+          position="0 1.6 -2.5"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+          </a-plane>
+      <a-plane id="shapewall2"
+          width="5"
+          height="3"
+          position="2.5 1.6 -5"
+          rotation="0 -90 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <a-plane id="shapewall3"
+          width="5"
+          height="3"
+          position="2.6 1.6 0"
+          rotation="0 90 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <a-plane id="shapewall4"
+          width="5"
+          height="3"
+          position="2.6 1.6 -5"
+          rotation="0 90 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <a-plane id="shapewall5"
+          width="5"
+          height="3"
+          position="2.5 1.6 0"
+          rotation="0 -90 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <a-plane id="shapewall6"
+          width="5"
+          height="3"
+          position="5 1.6 -2.6"
+          rotation="0 180 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <a-plane id="shapewall7"
+          width="5"
+          height="3"
+          position="5 1.6 -2.5"
+          rotation="0 0 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <a-plane id="shapewall8"
+          width="5"
+          height="3"
+          position="0 1.6 -2.6"
+          rotation="0 180 0"
+          material="color:#1e90ff"
+          update-raycaster="#cursor">
+      </a-plane>
+      <!-- shape templete Manufacturer banner -->
+      <a-plane width="7.07"
+			   height="0.6"
+			   position="5 2.7 0"
+			   rotation = "0 45 0"
+			   material="side:double;color:#1e90ff"></a-plane>
+	  <a-plane width="7.07"
+			   height="0.6"
+			   position="0 2.7 -5"
+			   rotation = "0 45 0"
+			   material="side:double;color:#1e90ff"></a-plane>
+	  <a-plane width="7.07"
+			   height="0.6"
+			   position="5 2.7 -5"
+			   rotation = "0 135 0"
+			   material="side:double;color:#1e90ff"></a-plane>
+	  <a-plane width="7.07"
+			   height="0.6"
+			   position="0 2.7 0"
+			   rotation = "0 135 0"
+			   material="side:double;color:#1e90ff"></a-plane>
+	  <!-- shape templete product picture -->
+	  <a-plane width="2"
+			   height="1.5"
+			   id="product3-1-pic"
+			   position="0 1.75 -2.4"
+			   rotation = "0 0 0"
+			   material="side:double;src: {{ src3_1 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:0 1.6 0;group_rotation:0 0 0;obj:{{ obj31 }};mtl:{{ mtl31 }};model_position:{{ position31 }};model_rotation:{{ rotation31 }};model_scale:{{ scale31 }};info:{{ info3_1 }}"
+			   my-animation="0 1.6 2.7"></a-plane>
+	  <a-plane width="2"
+			   height="1.5"
+			   id="product2-2-pic"
+			   position="0 1.75 -2.7"
+			   rotation = "0 180 0"
+			   material="side:double;src: {{ src2_2 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:0 1.6 -5;group_rotation:0 180 0;obj:{{ obj22 }};mtl:{{ mtl22 }};model_position:{{ position22 }};model_rotation:{{ rotation22 }};model_scale:{{ scale22 }};info:{{ info2_2 }}"
+			   my-animation="0 1.6 -7.7"
+			   ></a-plane>
+	  <a-plane width="2"
+			   height="1.5"
+			   position="5 1.75 -2.4"
+			   id="product4-2-pic"
+			   rotation = "0 0 0"
+			   material="side:double;src: {{ src4_2 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:5 1.6 0;group_rotation:0 0 0;obj:{{ obj42 }};mtl:{{ mtl42 }};model_position:{{ position42 }};model_rotation:{{ rotation42 }};model_scale:{{ scale42 }};info:{{ info4_2 }}"
+			   my-animation="5 1.6 2.7"></a-plane>
+	  <a-plane width="2"
+	  		   id="product1-2-pic"
+			   height="1.5"
+			   position="5 1.75 -2.7"
+			   rotation = "0 180 0"
+			   material="side:double;src: {{ src1_2 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:5 1.6 -5;group_rotation:0 180 0;obj:{{ obj12 }};mtl:{{ mtl12 }};model_position:{{ position12 }};model_rotation:{{ rotation12 }};model_scale:{{ scale12 }};info:{{ info1_2 }}"
+			   my-animation="5 1.6 -7.7"></a-plane>
+	  <a-plane width="2"
+			   height="1.5"
+			   id="product3-2-pic"
+			   position="2.4 1.75 0"
+			   rotation = "0 90 0"
+			   material="side:double;src: {{ src3_2 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:0 1.6 0;group_rotation:0 -90 0;obj:{{ obj32 }};mtl:{{ mtl32 }};model_position:{{ position32 }};model_rotation:{{ rotation32 }};model_scale:{{ scale32 }};info:{{ info3_2 }}"
+			   my-animation="-2.7 1.6 0"></a-plane>
+	  <a-plane width="2"
+			   height="1.5"
+			   position="2.7 1.75 0"
+			   id="product4-1-pic"
+			   rotation = "0 90 0"
+			   material="side:double;src: {{ src4_1 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:5 1.6 0;group_rotation:0 90 0;obj:{{ obj41 }};mtl:{{ mtl41 }};model_position:{{ position41 }};model_rotation:{{ rotation41 }};model_scale:{{ scale41 }};info:{{ info4_1 }}"
+			   my-animation="7.7 1.6 0"></a-plane>
+	  <a-plane width="2"
+			   height="1.5"
+			   position="2.4 1.75 -5"
+			   id="product2-1-pic"
+			   rotation = "0 90 0"
+			   material="side:double;src: {{ src2_1 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:0 1.6 -5;group_rotation:0 -90 0;obj:{{ obj21 }};mtl:{{ mtl21 }};model_position:{{ position21 }};model_rotation:{{ rotation21 }};model_scale:{{ scale21 }};info:{{ info3_1 }}"
+			   my-animation="-2.7 1.6 -5"></a-plane>
+	  <a-plane 
+	  		   id="product1-1-pic"
+	  		   width="2"
+			   height="1.5"
+			   position="2.7 1.75 -5"
+			   rotation = "0 90 0"
+			   material="side:double;src: {{ src1_1 }}"
+			   update-raycaster="#cursor"
+			   lazy-loading="group_position:5 1.6 -5;group_rotation:0 90 0;obj:{{ obj11 }};mtl:{{ mtl11 }};model_position:{{ position11 }};model_rotation:{{ rotation11 }};model_scale:{{ scale11 }};info:{{ info3_1 }}"
+			   my-animation="7.7 1.6 -5"
+			   ></a-plane>
+
+	  
+
+	  <!-- shape templete Manufacturer lable -->
+	  <a-entity text="text:{{ text3 }}"
+	  			id="text3" 
+	  			scale="0.8 0.8 0.8"
+	  			material="color:black"
+	  			position="-1.9 2.55 -1.9"
+	  			rotation="0 -45 0"></a-entity>
+	  <a-entity text="text:{{ text2 }}"
+	  			id="text2" 
+	  			scale="0.8 0.8 0.8"
+	  			material="color:black"
+	  			position="1.9 2.55 -6.9"
+	  			rotation="0 -135 0"></a-entity>
+	  <a-entity text="text:{{ text4 }}"
+	  			id="text4" 
+	  			scale="0.8 0.8 0.8"
+	  			material="color:black"
+	  			position="3.4 2.55 1.7"
+	  			rotation="0 45 0"></a-entity>
+	  <a-entity text="text:{{ text1 }}"
+	  			material="color:black"
+	  			id="text1"
+	  			scale="0.8 0.8 0.8"
+	  			position="6.9 2.55 -3.2"
+	  			rotation="0 135 0"></a-entity>
+	  <!-- shape templete table entity -->
+      <a-entity 
+      		id="table1" 
+      		obj-model="obj:#table-obj;mtl:#table-mtl" 
+      		position="5 0 -5"
+      		scale="0.35 0.35 0.35"></a-entity>
+      <a-entity 
+      		id="table2" 
+      		obj-model="obj:#table-obj;mtl:#table-mtl" 
+      		position="0 0 0"
+      		scale="0.35 0.35 0.35"></a-entity>
+      <a-entity 
+      		id="table3" 
+      		obj-model="obj:#table-obj;mtl:#table-mtl" 
+      		position="0 0 -5"
+      		scale="0.35 0.35 0.35"></a-entity>
+      <a-entity 
+      		id="table4" 
+      		obj-model="obj:#table-obj;mtl:#table-mtl" 
+      		position="5 0 "
+      		scale="0.35 0.35 0.35"></a-entity>		
+  </a-entity>
+        </script>
+	</a-assets>
+	<a-entity camera id="camera" position="0 1.6 0"  universal-controls  my-collider="radius:0.2">
+		<a-cursor 
+		  id="cursor"
+		  position="0 0 -1"
+		  scale="1 1 1"
+          fuse=true
+          fuse-timeout=1500
+          raycaster="objects:#box2"
+          event-set__1="_event: mouseenter; color: springgreen"
+          event-set__2="_event: mouseleave; color: black"
+          >
+  		</a-cursor>
+	</a-entity>
+	<a-entity 
+			id="arrow_forward1" 
+			limit-angle="selector:#cursor;scale:1;positiony:0" 
+			position="0 0 -2">
+	<a-entity
+			id = "arrow"
+			obj-model="obj:#myarrow-obj" 
+			rotation="-80 0 0 "
+			scale="0.06 0.08 0.08"
+			material="transparent:true;opacity:0.01"
+			arrow-move="true"
+			></a-entity>
+			</a-entity>
+	<a-plane 
+			width="500" 
+			height = "500" 
+			position = "0 0 0"  
+			rotation = "-90 0 0 " 
+			static-body
+			id="ground"
+			material="src:#floor;repeat:100 100"></a-plane>
+
+			<!-- house entities -->
+	<a-entity 
+			id = "house1"
+			template="src:#house" 
+			position="24.55 0 -17.03"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="24.55 0 -8.03"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="24.55 0 1.03"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="ASUS"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="24.55 0 10.03"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="24.55 0 19.03"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="24.55 0 28.03"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	
+	<a-entity 
+			template="src:#house" 
+			position="22 0 -26"
+			rotation="0 90 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="13 0 -26"
+			rotation="0 90 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="4 0 -26"
+			rotation="0 90 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-5 0 -26"
+			rotation="0 90 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-14 0 -26"
+			rotation="0 90 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-24.55 0 -22.03"
+			rotation="0 180 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-24.55 0 -13.03"
+			rotation="0 180 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-24.55 0 -4.03"
+			rotation="0 180 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-24.55 0 5.03"
+			rotation="0 180 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-24.55 0 14.03"
+			rotation="0 180 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"></a-entity>
+	<a-entity 
+			template="src:#house" 
+			position="-24.55 0 23.03"
+			rotation="0 180 0"
+			data-src1="#winphone_pic"
+			data-src2="#iphone_pic"
+			data-src3="#motherboard1_pic"
+			data-text="EVGA"
+			data-obj1="url(object/new_scene/win7phone/windows7_phone.obj)"
+			data-mtl1="url(object/new_scene/win7phone/windows7_phone.mtl)"
+			data-position1="0 -0.48 0"
+			data-rotation1="90 0 0"
+			data-scale1="0.01 0.01 0.01"
+			data-obj2="url(object/new_scene/iphone5s/iphone-5s.obj)"
+			data-mtl2="url(object/new_scene/iphone5s/iphone-5s.mtl)"
+			data-position2="0 -0.5 0"
+			data-rotation2="0 0 0"
+			data-scale2="0.005 0.005 0.005"
+			data-obj3="url(object/asus-sabertooth-990-fx.obj)"
+			data-mtl3="url(object/asus-sabertooth-990-fx.mtl)"
+			data-position3="0 1 0"
+			data-rotation3="0 0 0"
+			data-scale3="0.3 0.3 0.3"
+			data-obj4="url(object/new_scene/nokia/Nokia N80.obj)"
+			data-mtl4="url(object/new_scene/nokia/Nokia N80.mtl)"
+			data-position4="0 0 0"
+			data-rotation4="90 0 0"
+			data-scale4="0.002 0.002 0.002"
+			data-src4="#nokia_pic"F></a-entity>
+	
+			<!-- shape entities -->
+	<a-entity 
+			position="10 0 -10"
+			template="src:#shape"
+			data-src1_1="#speakers_pic"
+			data-src1_2="#cpu_pic"
+			data-src2_1="#power_pic"
+			data-src2_2="#wirelesscard_pic"
+			data-src3_1="#motherboard_pic"
+			data-src3_2="#monitor_pic"
+			data-src4_1="#memory_pic"
+			data-src4_2="#graphics_pic"
+			data-text1="Inter"
+			data-text2="MSI"
+			data-text3="EVGA"
+			data-text4="ASUS"
+			data-obj11="url(object/new_scene/speakers/speakers.obj)"
+			data-mtl11="url(object/new_scene/speakers/speakers.mtl)"
+			data-position11="0 -0.6 0"
+			data-rotation11="0 0 0"
+			data-scale11="0.0015 0.0015 0.0015"
+			data-obj21="url(object/new_scene/power.obj)"
+			data-mtl21="url(object/new_scene/power.mtl)"
+			data-position21="-0.7 -0.6 0.7"
+			data-rotation21="0 0 0"
+			data-scale21="0.006 0.006 0.006"
+			data-obj31="url(object/new_scene/motherboard.obj)"
+			data-mtl31="url(object/new_scene/motherboard.mtl)"
+			data-position31="0 0.12 0"
+			data-rotation31="90 0 0"
+			data-scale31="0.008 0.008 0.008"
+			data-obj12="url(object/cpu-socket.obj)"
+			data-mtl12="url(object/cpu-socket.mtl)"
+			data-position12="0 0.1 0"
+			data-rotation12="0 0 0"
+			data-scale12="1 1 1"
+			data-obj22="url(object/wireless-card.obj)"
+			data-mtl22="url(object/wireless-card.mtl)"
+			data-position22="0 -0.05 0"
+			data-rotation22="0 0 0"
+			data-scale22="1 1 1"
+			data-obj32="url(object/new_scene/monitor/monitor.obj)"
+			data-mtl32="url(object/new_scene/monitor/monitor.mtl)"
+			data-position32="0 0 0"
+			data-rotation32="0 0 0"
+			data-scale32="1 1 1"
+			data-obj41="url(object/new_scene/memory/reaper.obj)"
+			data-mtl41="url(object/new_scene/memory/reaper.mtl)"
+			data-position41="-0.75 -0.63 -0.23"
+			data-rotation41="0 0 0"
+			data-scale41="0.01 0.01 0.01"
+			data-obj42="url(object/new_scene/amd_radeon/amd_radeon.obj)"
+			data-mtl42="url(object/new_scene/amd_radeon/amd_radeon.mtl)"
+			data-position42="-2 0.45 0"
+			data-rotation42="90 0 0"
+			data-scale42="0.005 0.005 0.005"
+			data-info3_2="url(img/new_scene/monitor_info.png)"
+			data-info3_1="url(img/new_scene/graphics_info.png)"
+			data-info4_2="url(img/new_scene/monitor_info.png)"
+			data-info4_1="url(img/new_scene/graphics_info.png)"
+			data-info2_2="url(img/new_scene/monitor_info.png)"
+			data-info2_1="url(img/new_scene/graphics_info.png)"
+			data-info1_2="url(img/new_scene/monitor_info.png)"
+			data-info1_1="url(img/new_scene/graphics_info.png)"></a-entity>
+
+	<a-entity 
+			position="10 0 5"
+			template="src:#shape"
+			data-src1_1="#speakers_pic"
+			data-src1_2="#cpu_pic"
+			data-src2_1="#power_pic"
+			data-src2_2="#wirelesscard_pic"
+			data-src3_1="#motherboard_pic"
+			data-src3_2="#monitor_pic"
+			data-src4_1="#memory_pic"
+			data-src4_2="#graphics_pic"
+			data-text1="Inter"
+			data-text2="MSI"
+			data-text3="EVGA"
+			data-text4="ASUS"
+			data-obj11="url(object/new_scene/speakers/speakers.obj)"
+			data-mtl11="url(object/new_scene/speakers/speakers.mtl)"
+			data-position11="0 -0.6 0"
+			data-rotation11="0 0 0"
+			data-scale11="0.0015 0.0015 0.0015"
+			data-obj21="url(object/new_scene/power.obj)"
+			data-mtl21="url(object/new_scene/power.mtl)"
+			data-position21="-0.7 -0.6 0.7"
+			data-rotation21="0 0 0"
+			data-scale21="0.006 0.006 0.006"
+			data-obj31="url(object/new_scene/motherboard.obj)"
+			data-mtl31="url(object/new_scene/motherboard.mtl)"
+			data-position31="0 0.12 0"
+			data-rotation31="90 0 0"
+			data-scale31="0.008 0.008 0.008"
+			data-obj12="url(object/cpu-socket.obj)"
+			data-mtl12="url(object/cpu-socket.mtl)"
+			data-position12="0 0.1 0"
+			data-rotation12="0 0 0"
+			data-scale12="1 1 1"
+			data-obj22="url(object/wireless-card.obj)"
+			data-mtl22="url(object/wireless-card.mtl)"
+			data-position22="0 -0.05 0"
+			data-rotation22="0 0 0"
+			data-scale22="1 1 1"
+			data-obj32="url(object/new_scene/monitor/monitor.obj)"
+			data-mtl32="url(object/new_scene/monitor/monitor.mtl)"
+			data-position32="0 0 0"
+			data-rotation32="0 0 0"
+			data-scale32="1 1 1"
+			data-obj41="url(object/new_scene/memory/reaper.obj)"
+			data-mtl41="url(object/new_scene/memory/reaper.mtl)"
+			data-position41="-0.75 -0.63 -0.23"
+			data-rotation41="0 0 0"
+			data-scale41="0.01 0.01 0.01"
+			data-obj42="url(object/new_scene/amd_radeon/amd_radeon.obj)"
+			data-mtl42="url(object/new_scene/amd_radeon/amd_radeon.mtl)"
+			data-position42="-2 0.45 0"
+			data-rotation42="90 0 0"
+			data-scale42="0.005 0.005 0.005"
+			data-info3_2="url(img/new_scene/monitor_info.png)"
+			data-info3_1="url(img/new_scene/graphics_info.png)"
+			data-info4_2="url(img/new_scene/monitor_info.png)"
+			data-info4_1="url(img/new_scene/graphics_info.png)"
+			data-info2_2="url(img/new_scene/monitor_info.png)"
+			data-info2_1="url(img/new_scene/graphics_info.png)"
+			data-info1_2="url(img/new_scene/monitor_info.png)"
+			data-info1_1="url(img/new_scene/graphics_info.png)"></a-entity>
+
+	<a-entity 
+			position="10 0 20"
+			template="src:#shape"
+			data-src1_1="#speakers_pic"
+			data-src1_2="#cpu_pic"
+			data-src2_1="#power_pic"
+			data-src2_2="#wirelesscard_pic"
+			data-src3_1="#motherboard_pic"
+			data-src3_2="#monitor_pic"
+			data-src4_1="#memory_pic"
+			data-src4_2="#graphics_pic"
+			data-text1="Inter"
+			data-text2="MSI"
+			data-text3="EVGA"
+			data-text4="ASUS"
+			data-obj11="url(object/new_scene/speakers/speakers.obj)"
+			data-mtl11="url(object/new_scene/speakers/speakers.mtl)"
+			data-position11="0 -0.6 0"
+			data-rotation11="0 0 0"
+			data-scale11="0.0015 0.0015 0.0015"
+			data-obj21="url(object/new_scene/power.obj)"
+			data-mtl21="url(object/new_scene/power.mtl)"
+			data-position21="-0.7 -0.6 0.7"
+			data-rotation21="0 0 0"
+			data-scale21="0.006 0.006 0.006"
+			data-obj31="url(object/new_scene/motherboard.obj)"
+			data-mtl31="url(object/new_scene/motherboard.mtl)"
+			data-position31="0 0.12 0"
+			data-rotation31="90 0 0"
+			data-scale31="0.008 0.008 0.008"
+			data-obj12="url(object/cpu-socket.obj)"
+			data-mtl12="url(object/cpu-socket.mtl)"
+			data-position12="0 0.1 0"
+			data-rotation12="0 0 0"
+			data-scale12="1 1 1"
+			data-obj22="url(object/wireless-card.obj)"
+			data-mtl22="url(object/wireless-card.mtl)"
+			data-position22="0 -0.05 0"
+			data-rotation22="0 0 0"
+			data-scale22="1 1 1"
+			data-obj32="url(object/new_scene/monitor/monitor.obj)"
+			data-mtl32="url(object/new_scene/monitor/monitor.mtl)"
+			data-position32="0 0 0"
+			data-rotation32="0 0 0"
+			data-scale32="1 1 1"
+			data-obj41="url(object/new_scene/memory/reaper.obj)"
+			data-mtl41="url(object/new_scene/memory/reaper.mtl)"
+			data-position41="-0.75 -0.63 -0.23"
+			data-rotation41="0 0 0"
+			data-scale41="0.01 0.01 0.01"
+			data-obj42="url(object/new_scene/amd_radeon/amd_radeon.obj)"
+			data-mtl42="url(object/new_scene/amd_radeon/amd_radeon.mtl)"
+			data-position42="-2 0.45 0"
+			data-rotation42="90 0 0"
+			data-scale42="0.005 0.005 0.005"
+			data-info3_2="url(img/new_scene/monitor_info.png)"
+			data-info3_1="url(img/new_scene/graphics_info.png)"
+			data-info4_2="url(img/new_scene/monitor_info.png)"
+			data-info4_1="url(img/new_scene/graphics_info.png)"
+			data-info2_2="url(img/new_scene/monitor_info.png)"
+			data-info2_1="url(img/new_scene/graphics_info.png)"
+			data-info1_2="url(img/new_scene/monitor_info.png)"
+			data-info1_1="url(img/new_scene/graphics_info.png)"></a-entity>
+	<a-entity 
+			position="-10 0 5"
+			template="src:#shape"
+			data-src1_1="#speakers_pic"
+			data-src1_2="#cpu_pic"
+			data-src2_1="#power_pic"
+			data-src2_2="#wirelesscard_pic"
+			data-src3_1="#motherboard_pic"
+			data-src3_2="#monitor_pic"
+			data-src4_1="#memory_pic"
+			data-src4_2="#graphics_pic"
+			data-text1="Inter"
+			data-text2="MSI"
+			data-text3="EVGA"
+			data-text4="ASUS"
+			data-obj11="url(object/new_scene/speakers/speakers.obj)"
+			data-mtl11="url(object/new_scene/speakers/speakers.mtl)"
+			data-position11="0 -0.6 0"
+			data-rotation11="0 0 0"
+			data-scale11="0.0015 0.0015 0.0015"
+			data-obj21="url(object/new_scene/power.obj)"
+			data-mtl21="url(object/new_scene/power.mtl)"
+			data-position21="-0.7 -0.6 0.7"
+			data-rotation21="0 0 0"
+			data-scale21="0.006 0.006 0.006"
+			data-obj31="url(object/new_scene/motherboard.obj)"
+			data-mtl31="url(object/new_scene/motherboard.mtl)"
+			data-position31="0 0.12 0"
+			data-rotation31="90 0 0"
+			data-scale31="0.008 0.008 0.008"
+			data-obj12="url(object/cpu-socket.obj)"
+			data-mtl12="url(object/cpu-socket.mtl)"
+			data-position12="0 0.1 0"
+			data-rotation12="0 0 0"
+			data-scale12="1 1 1"
+			data-obj22="url(object/wireless-card.obj)"
+			data-mtl22="url(object/wireless-card.mtl)"
+			data-position22="0 -0.05 0"
+			data-rotation22="0 0 0"
+			data-scale22="1 1 1"
+			data-obj32="url(object/new_scene/monitor/monitor.obj)"
+			data-mtl32="url(object/new_scene/monitor/monitor.mtl)"
+			data-position32="0 0 0"
+			data-rotation32="0 0 0"
+			data-scale32="1 1 1"
+			data-obj41="url(object/new_scene/memory/reaper.obj)"
+			data-mtl41="url(object/new_scene/memory/reaper.mtl)"
+			data-position41="-0.75 -0.63 -0.23"
+			data-rotation41="0 0 0"
+			data-scale41="0.01 0.01 0.01"
+			data-obj42="url(object/new_scene/amd_radeon/amd_radeon.obj)"
+			data-mtl42="url(object/new_scene/amd_radeon/amd_radeon.mtl)"
+			data-position42="-2 0.45 0"
+			data-rotation42="90 0 0"
+			data-scale42="0.005 0.005 0.005"
+			data-info3_2="url(img/new_scene/monitor_info.png)"
+			data-info3_1="url(img/new_scene/graphics_info.png)"
+			data-info4_2="url(img/new_scene/monitor_info.png)"
+			data-info4_1="url(img/new_scene/graphics_info.png)"
+			data-info2_2="url(img/new_scene/monitor_info.png)"
+			data-info2_1="url(img/new_scene/graphics_info.png)"
+			data-info1_2="url(img/new_scene/monitor_info.png)"
+			data-info1_1="url(img/new_scene/graphics_info.png)"></a-entity>
+	<a-entity 
+			id="shape1"
+			position="-10 0 -10"
+			template="src:#shape"
+			data-src1_1="#speakers_pic"
+			data-src1_2="#cpu_pic"
+			data-src2_1="#power_pic"
+			data-src2_2="#wirelesscard_pic"
+			data-src3_1="#motherboard_pic"
+			data-src3_2="#monitor_pic"
+			data-src4_1="#memory_pic"
+			data-src4_2="#graphics_pic"
+			data-text1="Inter"
+			data-text2="MSI"
+			data-text3="EVGA"
+			data-text4="ASUS"
+			data-obj11="url(object/new_scene/speakers/speakers.obj)"
+			data-mtl11="url(object/new_scene/speakers/speakers.mtl)"
+			data-position11="0 -0.6 0"
+			data-rotation11="0 0 0"
+			data-scale11="0.0015 0.0015 0.0015"
+			data-obj21="url(object/new_scene/power.obj)"
+			data-mtl21="url(object/new_scene/power.mtl)"
+			data-position21="-0.7 -0.6 0.7"
+			data-rotation21="0 0 0"
+			data-scale21="0.006 0.006 0.006"
+			data-obj31="url(object/new_scene/motherboard.obj)"
+			data-mtl31="url(object/new_scene/motherboard.mtl)"
+			data-position31="0 0.12 0"
+			data-rotation31="90 0 0"
+			data-scale31="0.008 0.008 0.008"
+			data-obj12="url(object/cpu-socket.obj)"
+			data-mtl12="url(object/cpu-socket.mtl)"
+			data-position12="0 0.1 0"
+			data-rotation12="0 0 0"
+			data-scale12="1 1 1"
+			data-obj22="url(object/wireless-card.obj)"
+			data-mtl22="url(object/wireless-card.mtl)"
+			data-position22="0 -0.05 0"
+			data-rotation22="0 0 0"
+			data-scale22="1 1 1"
+			data-obj32="url(object/new_scene/monitor/monitor.obj)"
+			data-mtl32="url(object/new_scene/monitor/monitor.mtl)"
+			data-position32="0 0 0"
+			data-rotation32="0 0 0"
+			data-scale32="1 1 1"
+			data-obj41="url(object/new_scene/memory/reaper.obj)"
+			data-mtl41="url(object/new_scene/memory/reaper.mtl)"
+			data-position41="-0.75 -0.63 -0.23"
+			data-rotation41="0 0 0"
+			data-scale41="0.01 0.01 0.01"
+			data-obj42="url(object/new_scene/amd_radeon/amd_radeon.obj)"
+			data-mtl42="url(object/new_scene/amd_radeon/amd_radeon.mtl)"
+			data-position42="-2 0.45 0"
+			data-rotation42="90 0 0"
+			data-scale42="0.005 0.005 0.005"
+			data-info3_2="url(img/new_scene/monitor_info.png)"
+			data-info3_1="url(img/new_scene/graphics_info.png)"
+			data-info4_2="url(img/new_scene/monitor_info.png)"
+			data-info4_1="url(img/new_scene/graphics_info.png)"
+			data-info2_2="url(img/new_scene/monitor_info.png)"
+			data-info2_1="url(img/new_scene/graphics_info.png)"
+			data-info1_2="url(img/new_scene/monitor_info.png)"
+			data-info1_1="url(img/new_scene/graphics_info.png)"></a-entity>
+	<a-entity 
+			position="-10 0 20"
+			template="src:#shape"
+			data-src1_1="#speakers_pic"
+			data-src1_2="#cpu_pic"
+			data-src2_1="#power_pic"
+			data-src2_2="#wirelesscard_pic"
+			data-src3_1="#motherboard_pic"
+			data-src3_2="#monitor_pic"
+			data-src4_1="#memory_pic"
+			data-src4_2="#graphics_pic"
+			data-text1="Inter"
+			data-text2="MSI"
+			data-text3="EVGA"
+			data-text4="ASUS"
+			data-obj11="url(object/new_scene/speakers/speakers.obj)"
+			data-mtl11="url(object/new_scene/speakers/speakers.mtl)"
+			data-position11="0 -0.6 0"
+			data-rotation11="0 0 0"
+			data-scale11="0.0015 0.0015 0.0015"
+			data-obj21="url(object/new_scene/power.obj)"
+			data-mtl21="url(object/new_scene/power.mtl)"
+			data-position21="-0.7 -0.6 0.7"
+			data-rotation21="0 0 0"
+			data-scale21="0.006 0.006 0.006"
+			data-obj31="url(object/new_scene/motherboard.obj)"
+			data-mtl31="url(object/new_scene/motherboard.mtl)"
+			data-position31="0 0.12 0"
+			data-rotation31="90 0 0"
+			data-scale31="0.008 0.008 0.008"
+			data-obj12="url(object/cpu-socket.obj)"
+			data-mtl12="url(object/cpu-socket.mtl)"
+			data-position12="0 0.1 0"
+			data-rotation12="0 0 0"
+			data-scale12="1 1 1"
+			data-obj22="url(object/wireless-card.obj)"
+			data-mtl22="url(object/wireless-card.mtl)"
+			data-position22="0 -0.05 0"
+			data-rotation22="0 0 0"
+			data-scale22="1 1 1"
+			data-obj32="url(object/new_scene/monitor/monitor.obj)"
+			data-mtl32="url(object/new_scene/monitor/monitor.mtl)"
+			data-position32="0 0 0"
+			data-rotation32="0 0 0"
+			data-scale32="1 1 1"
+			data-obj41="url(object/new_scene/memory/reaper.obj)"
+			data-mtl41="url(object/new_scene/memory/reaper.mtl)"
+			data-position41="-0.75 -0.63 -0.23"
+			data-rotation41="0 0 0"
+			data-scale41="0.01 0.01 0.01"
+			data-obj42="url(object/new_scene/amd_radeon/amd_radeon.obj)"
+			data-mtl42="url(object/new_scene/amd_radeon/amd_radeon.mtl)"
+			data-position42="-2 0.45 0"
+			data-rotation42="90 0 0"
+			data-scale42="0.005 0.005 0.005"
+			data-info3_2="url(img/new_scene/monitor_info.png)"
+			data-info3_1="url(img/new_scene/graphics_info.png)"
+			data-info4_2="url(img/new_scene/monitor_info.png)"
+			data-info4_1="url(img/new_scene/graphics_info.png)"
+			data-info2_2="url(img/new_scene/monitor_info.png)"
+			data-info2_1="url(img/new_scene/graphics_info.png)"
+			data-info1_2="url(img/new_scene/monitor_info.png)"
+			data-info1_1="url(img/new_scene/graphics_info.png)"></a-entity>
+			
+	<a-entity 
+			id="title" 
+			position="-16 4 -29.72" 
+			scale="3.5 3.5 3.5"
+			material="color:#5882FA"
+			text="text:The 9th Asia - Europe Exposition"
+			></a-entity>
+	<a-entity 
+			geometry="primitive:cylinder;height:5.5;radius:0.08" 
+			position="-30 3 -30" 
+			material="color:#9F986C"></a-entity>
+	<a-entity 
+			geometry="primitive:cylinder;height:5.5;radius:0.08" 
+			position="30 3 -30" 
+			material="color:#9F986C"></a-entity>
+	<a-entity
+			id="title_plane"
+			geometry="primitive:plane;width:60;height:3.5"
+			position="0 5 -30"
+			material="color:#FFFFFF"></a-entity>
+	<a-entity 
+			id = "door" 
+			collider-able
+			update-raycaster="#cursor"
+			obj-model="obj:#door-obj;mtl:#door-mtl" 
+			position="0 1 29.8" 
+			my-animation="-0.8411394953727722 1.600000023841858 29.250324249267578"
+			scale="0.8 0.8 0.8"></a-entity>
+	<a-box 
+			position="-30 1.5 0" 
+			depth="60" 
+			height="3" 
+			width="0.5"
+			id = "wall1"
+			collider-able
+			material="src:#wall;repeat:10 1"
+			></a-box>
+	<a-box 
+			position="30 1.5 0" 
+			depth="60" 
+			height="3" 
+			width="0.5"
+			collider-able
+			material="src:#wall;repeat:10 1"
+			></a-box>
+	<a-box 
+			position="0 1.5 30" 
+			depth="60" 
+			height="3" 
+			rotation="0 -90 0" 
+			width="0.5"
+			collider-able
+			material="src:#wall;repeat:10 1"
+			></a-box>
+	<a-box 
+			position="0 1.5 -30" 
+			depth="60" 
+			height="3" 
+			rotation="0 -90 0" 
+			width="0.5"
+			collider-able
+			material="src:#wall;repeat:10 1"
+			></a-box>
+	<a-sky src="#sky" radius=1000></a-sky>
+	<a-entity 
+			id= "light" 
+			light="type: ambient; color: #FFFFFF; intensity: 1" >
+	</a-entity>
+	<a-entity obj-model="obj:#frame-obj" scale="0.022 0.01 0.016" material="src:#wood_pic;repeat:10 10"></a-entity>
+</a-scene>
+</html>

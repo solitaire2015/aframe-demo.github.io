@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Move by limit angle</title>
+    <meta name="description" content="Movement Test">
+    <script src="javascripts/aframe.js"></script>
+    <script src="javascripts/aframe-extras.js"></script>
+    <script>
+      AFRAME.registerComponent("arrow-move",{
+    schema:{
+      movementenable:{
+        default:true
+      }
+    },
+    init:function(){
+      this.cursor = document.querySelector("#cursor");
+      this.direction = new THREE.Vector3();
+      this.camera = document.querySelector("#camera");
+      this.camera_pos = new THREE.Vector3();
+      this.cursor_pos = new THREE.Vector3();
+      this.cursor_rotation = new THREE.Euler(0,0,0,"YXZ");
+    },
+    tick:function(){
+      this.cursor_rotation.setFromRotationMatrix(this.cursor.object3D.matrixWorld);
+      this.cursor_pos.setFromMatrixPosition(this.cursor.object3D.matrixWorld);
+      if(!(this.data.movementenable))
+      {
+        return;
+      }
+      if((this.cursor_rotation.x<-0.16999999614859562)||(this.cursor_rotation.x<-0.16999999614859562))
+      {
+        this.camera_pos.setFromMatrixPosition(this.camera.object3D.matrixWorld);
+        this.direction.subVectors(this.cursor_pos,this.camera_pos);
+        this.direction.y=0;
+        this.direction.normalize();
+        this.direction.multiplyScalar(0.05);
+        this.camera.components.position.data.x+=this.direction.x;
+        this.camera.components.position.data.z+=this.direction.z;
+        this.camera.components.position.update();
+      }
+    }
+  });
+    </script>
+  </head>
+  <body>
+    <a-scene>
+      <a-entity id = "box1" scale = "0.5 0.5 0.5" position = "-0.5 0 0" material="color:#EF2D52" update-raycaster="#cursor" geometry="primitive:box" change-size></a-entity>
+      <a-box id = "box2" scale = "0.5 0.5 0.5" position = "1 0 0" color = "blue" change-size></a-box>
+      <a-plane width="500" height = "500" position = "0 -0.25 0"  rotation="-90 0 0" material="color:#A4A4A4"></a-plane>
+      <a-entity position="0 0 3.8">
+        <a-camera id="camera" universal-controls arrow-move>
+			<a-cursor id = "cursor" raycaster="objects:a-sky" event-set__1="_event: mouseenter; color: springgreen"
+          event-set__2="_event: mouseleave; color: black"></a-cursor>
+		</a-camera>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>
