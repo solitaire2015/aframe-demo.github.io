@@ -110,31 +110,30 @@
                     temp.rotation[key] += Math.PI * 2;
                 }
             }
-            //球心到middle_point的向量为 camera.position ，球心 ， temp.position 所组成的圆面的法向量。
-            var middle_point = new THREE.Vector3(0.5*(temp.position.x-camera.position.x),0.5*(temp.position.y-camera.position.y),0.5*(temp.position.z-camera.position.z));
-            var n_vector = new THREE.Vector3().copy(middle_point).normalize();
-            var u_vector = new THREE.Vector3(n_vector.y,(-1) * n_vector.x, 0);
-            var v_vector = new THREE.Vector3().crossVectors(n_vector,u_vector);
+            
+            var n_vector = new THREE.Vector3().crossVectors(camera.position,temp.position).normalize();
+            var u_vector = new THREE.Vector3().copy(camera.position).normalize();
+            var v_vector = new THREE.Vector3().crossVectors(n_vector,u_vector).normalize();
             var c_vector = new THREE.Vector3().copy(group.position).normalize();
             var r = camera.position.distanceTo(group.position);
             var cos_theta1 = (camera.position.y * v_vector.x  -v_vector.y * camera.position.x) / (r * v_vector.x * u_vector.y - r * v_vector.y * u_vector.x);
             var cos_theta2 = (temp.position.y * v_vector.x -v_vector.y * temp.position.x ) / (r * v_vector.x * u_vector.y - r * v_vector.y * u_vector.x);
+            if(cos_theta2 === 0)
+            {
+                cos_theta2 = (temp.position.y * v_vector.z -v_vector.y * temp.position.z ) / (r * v_vector.z * u_vector.y - r * v_vector.y * u_vector.z);
+            }
             var theta1 = Math.acos(cos_theta1);
             var theta2 = Math.acos(cos_theta2);
-            //console.log(camera.position);
-            //console.log(camera.rotation);
-            //console.log(temp.position);
-            //console.log(temp.rotation);
             console.log(camera.position.distanceTo(group.position));
             // 这块我改成了tween.js,但是效果很夸张
-            var tween2 = new TWEEN.Tween(camera.rotation)
+            /*var tween2 = new TWEEN.Tween(camera.rotation)
                     .to({
                         x : temp.rotation.x,
                         y : temp.rotation.y,
                         z : temp.rotation.z
                     } , 1000)
                     .easing(TWEEN.Easing.Linear.None)
-                    .start();
+                    .start();*/
             var tween = new TWEEN.Tween({
                     step:1000,
                     theta1:theta1,
@@ -151,7 +150,9 @@
                         camera.position.x = this.center.x + this.radius * (this.u.x * Math.cos(this.theta1) + this.v.x * Math.sin(this.theta1));
                         camera.position.y = this.center.y + this.radius * (this.u.y * Math.cos(this.theta1) + this.v.y * Math.sin(this.theta1));
                         camera.position.z = this.center.z + this.radius * (this.u.z * Math.cos(this.theta1) + this.v.z * Math.sin(this.theta1));
-                        console.log(this.theta1);
+                        camera.lookAt(group.position);
+                        //console.log("temp: ",temp.position,"    current position:",camera.position);
+                        console.log("theta1: ",this.theta1, " theta2 :",this.theta2);
                     })
                     .easing(TWEEN.Easing.Linear.None)
                     .start();
