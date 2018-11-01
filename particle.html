@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js - gpu particle system</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+	body {
+		font-family: Monospace;
+		background-color: #f0f0f0;
+		margin: 0px;
+		overflow: hidden;
+	}
+	#info {
+		position: absolute;
+		top: 0px;
+		width: 100%;
+		padding: 5px;
+		font-family:Monospace;
+		font-size:13px;
+		text-align:center;
+		color: #ffffff;
+	}
+	a {
+		color: #ffffff;
+	}
+	</style>
+</head>
+
+<body>
+
+	<div id="container"></div>
+
+
+	<script src="./javascripts/three.min.js"></script>
+	<script src="./javascripts/controls/OrbitControls.js"></script>
+	<script src="./javascripts/GPUParticleSystem.js"></script>
+	<script src="/javascripts/loaders/OBJLoader.js"></script>
+	<script src="/javascripts/loaders/MTLLoader.js"></script>
+
+	<script>
+		var camera, tick = 0,
+			scene, renderer, clock = new THREE.Clock(),
+			controls, container, pointCloud, pointsGeometry,
+			options, spawnerOptions, particleSystem;
+		var trace_direction, start_point;
+		init();
+		animate();
+		function init() {
+			//
+			container = document.getElementById( 'container' );
+			camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.z = 100;
+			scene = new THREE.Scene();
+			// The GPU Particle system extends THREE.Object3D, and so you can use it
+			// as you would any other scene graph component.	Particle positions will be
+			// relative to the position of the particle system, but you will probably only need one
+			// system for your whole scene
+			particleSystem = new THREE.GPUParticleSystem( {
+				maxParticles: 25000
+			} );
+			scene.add( particleSystem );
+			// options passed during each spawned
+			options = {
+				position: new THREE.Vector3(),
+				positionRandomness: .3,
+				velocity: new THREE.Vector3(),
+				velocityRandomness: .5,
+				color: 0xaa88ff,
+				colorRandomness: .2,
+				turbulence: .1,
+				lifetime: 1,
+				size: 3,
+				sizeRandomness: .5
+			};
+			spawnerOptions = {
+				spawnRate: 15000,
+				horizontalSpeed: 1.5,
+				verticalSpeed: 1.33,
+				timeScale: 1
+			};
+
+			pointsGeometry = new THREE.Geometry();
+			var x, y, z;
+			var directions = [];
+			for(var i=0; i <1000; i++) {
+			  x = (Math.random() * 800) - 400;
+			  y = (Math.random() * 800) - 400;
+			  z = (Math.random() * 800) - 400;
+
+			  pointsGeometry.vertices.push(new THREE.Vector3(x, y, z));
+			  c = Math.random();
+			  if(c>0.5){
+			  	directions.push(1);
+			  }
+			  else{
+			  	directions.push(0)
+			  }
+			  pointsGeometry.colors.push(new THREE.Color(c,c,c))
+			};
+			pointsGeometry.directions = directions;
+
+
+			var pointsMaterial = new THREE.PointCloudMaterial({
+			  	size: 1.4,
+  				vertexColors:  THREE.VertexColors
+			});
+
+			pointCloud = new THREE.PointCloud(pointsGeometry, pointsMaterial);
+			scene.add(pointCloud);
+
+
+			var light = new THREE.DirectionalLight( 0xffffff,1);
+		    light.position.set( 1, 100, 1 ).normalize();
+		    scene.add(light);
+
+
+			//
+			//
+			renderer = new THREE.WebGLRenderer();
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			container.appendChild( renderer.domElement );
+			//
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.rotateSpeed = 1.0;
+			controls.zoomSpeed = 2.2;
+			controls.panSpeed = 1;
+			controls.dynamicDampingFactor = 0.3;
+			//controls.autoRotate=true;
+			window.addEventListener( 'resize', onWindowResize, false );
+		}
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+		function animate() {
+			requestAnimationFrame( animate );
+			controls.update();
+			var delta = clock.getDelta() * spawnerOptions.timeScale;
+			tick += delta;
+			if ( tick <= 0 || tick >10) 
+				{
+					tick = 0;
+					matrix = new THREE.Matrix3().setFromMatrix4(camera.matrix);
+					direction = new THREE.Vector3().copy(camera.getWorldDirection());
+					up = new THREE.Vector3().copy(camera.up).applyMatrix3(matrix).multiplyScalar(10*Math.random());
+					center = new THREE.Vector3().addVectors(direction.multiplyScalar(100),camera.position);
+					center.add(up);
+					trace_direction = new THREE.Vector3(1,-0.4,0).applyMatrix3(matrix);
+					start_point = new THREE.Vector3().subVectors(center,trace_direction.multiplyScalar(50))
+				}
+			if ( delta > 0 ) {
+				trace_direction.normalize();
+				options.position.x = tick * trace_direction.x *20 + start_point.x ;
+				options.position.y = tick * trace_direction.y *20 + start_point.y ;
+				options.position.z = tick * trace_direction.z *20 + start_point.z ;
+				for ( var x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
+					// Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
+					// their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
+					particleSystem.spawnParticle( options );
+				}
+			}
+			for(var i=0; i<1000;i++)
+			{
+				if(pointCloud.geometry.directions[i]==0)
+				{
+					value = pointCloud.geometry.colors[i].r -0.01;
+					if(value < 0){
+						value = 0 - value;
+						pointCloud.geometry.directions[i] = 1;
+					}
+					pointCloud.geometry.colors[i].setRGB(value,value,value);
+				}
+				else{
+					value = pointCloud.geometry.colors[i].r +0.01;
+					if(value > 1){
+						value = value - 1;
+						pointCloud.geometry.directions[i] = 0;
+					}
+					pointCloud.geometry.colors[i].setRGB(value,value,value);
+				}
+				
+			}
+			pointCloud.geometry.colorsNeedUpdate = true;
+			particleSystem.update( tick );
+
+
+			render();
+		}
+		function render() {
+			renderer.render( scene, camera );
+		}
+	</script>
+</body>
+
+</html>
